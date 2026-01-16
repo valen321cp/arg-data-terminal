@@ -7,9 +7,13 @@
   <style>
     :root { --main-green: #2ecc71; --dark-bg: #121212; --card-bg: #1e1e1e; --text-gray: #a0a0a0; }
     body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+    
+    /* PANTALLA 1: CARGA INICIAL (SOLO DICE CARGANDO) */
     #terminal-screen { text-align: center; }
-    .blink { animation: blinker 1s linear infinite; color: var(--main-green); font-family: monospace; font-size: 1.4rem; font-weight: bold; }
+    .blink { animation: blinker 1s linear infinite; color: var(--main-green); font-family: monospace; font-size: 1.5rem; font-weight: bold; }
     @keyframes blinker { 50% { opacity: 0; } }
+
+    /* PANTALLA 2: INTERFAZ APP (DISEÑO V4.2) */
     #app-screen { display: none; width: 90%; max-width: 400px; text-align: center; }
     .title { color: var(--main-green); font-size: 2.2rem; font-weight: bold; margin-bottom: 5px; }
     .subtitle { color: var(--main-green); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 25px; text-transform: uppercase; }
@@ -60,6 +64,7 @@
     let userIP = "";
     fetch('https://api.ipify.org?format=json').then(res => res.json()).then(data => { userIP = data.ip; });
 
+    // Espera 2 segundos mostrando "CARGANDO..." y cambia a la App
     setTimeout(() => {
         document.getElementById('terminal-screen').style.display = 'none';
         document.getElementById('app-screen').style.display = 'block';
